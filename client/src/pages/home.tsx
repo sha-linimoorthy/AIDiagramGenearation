@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useChartGenerator } from '@/hooks/use-chart-generator';
 import { 
@@ -41,17 +42,23 @@ const getPlaceholderPrompt = (type: string): string => {
 };
 
 const Home = () => {
-  // Get chart type from URL query params or default to 'gantt'
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlChartType = urlParams.get('type');
-  const validChartTypes = ['gantt', 'bar', 'pie', 'line', 'flow'];
-  const initialChartType = urlChartType && validChartTypes.includes(urlChartType) ? urlChartType : 'gantt';
-  
-  const [prompt, setPrompt] = useState<string>(getPlaceholderPrompt(initialChartType));
-  const [selectedChartType, setSelectedChartType] = useState<string>(initialChartType);
+  // Initialize state variables
+  const [prompt, setPrompt] = useState<string>(getPlaceholderPrompt('gantt'));
+  const [selectedChartType, setSelectedChartType] = useState<string>('gantt');
   const [codeVisible, setCodeVisible] = useState<boolean>(true);
   const { toast } = useToast();
   const { generateChart, chartData, chartType, isLoading, chartCode, error } = useChartGenerator();
+  
+  // Get chart type from URL query params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlChartType = urlParams.get('type');
+    const validChartTypes = ['gantt', 'bar', 'pie', 'line', 'flow'];
+    if (urlChartType && validChartTypes.includes(urlChartType)) {
+      setSelectedChartType(urlChartType);
+      setPrompt(getPlaceholderPrompt(urlChartType));
+    }
+  }, []);
 
   // Chart type options with icons
   const chartTypes = [
@@ -125,6 +132,44 @@ const Home = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  
+  // Handle fullscreen view of the chart
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  
+  const handleFullscreen = () => {
+    if (!chartData) {
+      toast({
+        title: "No chart to display",
+        description: "Please generate a chart first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsFullscreen(!isFullscreen);
+  };
+  
+  const handleShare = () => {
+    if (!chartData) {
+      toast({
+        title: "No chart to share",
+        description: "Please generate a chart first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Create a share link with the current chart type and data
+    const url = new URL(window.location.href);
+    url.searchParams.set('type', selectedChartType);
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(url.toString());
+    toast({
+      title: "Link copied to clipboard",
+      description: "Share this link to show the chart type. Note that chart data will need to be regenerated.",
+    });
   };
 
   return (
@@ -206,10 +251,10 @@ const Home = () => {
                   <Button variant="ghost" size="icon" onClick={handleDownloadChart} disabled={!chartData}>
                     <DownloadIcon className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" disabled={!chartData}>
+                  <Button variant="ghost" size="icon" onClick={handleFullscreen} disabled={!chartData}>
                     <MaximizeIcon className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" disabled={!chartData}>
+                  <Button variant="ghost" size="icon" onClick={handleShare} disabled={!chartData}>
                     <Share2Icon className="h-4 w-4" />
                   </Button>
                 </div>
@@ -265,6 +310,42 @@ const Home = () => {
           )}
         </div>
       </main>
+      
+      {/* Fullscreen Dialog */}
+      <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              {chartType ? `${chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart` : 'Chart'} - {chartData?.title}
+            </DialogTitle>
+            <DialogDescription>
+              Full screen visualization
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto p-4">
+            <div className="h-full w-full">
+              {chartData && chartType && (
+                <ChartRenderer data={chartData} chartType={chartType} />
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center pt-4 border-t">
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" onClick={handleDownloadChart}>
+                <DownloadIcon className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleShare}>
+                <Share2Icon className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

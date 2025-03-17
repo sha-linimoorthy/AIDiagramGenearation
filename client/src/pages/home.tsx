@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
-import GanttChart from '@/components/ui/gantt-chart';
+import ChartRenderer from '@/components/ui/chart-renderer';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useChartGenerator } from '@/hooks/use-chart-generator';
 import { 
@@ -12,15 +13,46 @@ import {
   DownloadIcon, 
   Share2Icon, 
   MaximizeIcon,
-  RefreshCw
+  RefreshCw,
+  BarChartIcon,
+  PieChartIcon,
+  GanttChartSquareIcon
 } from 'lucide-react';
-import { type GanttChartData } from '@shared/schema';
+import { type ChartData } from '@shared/schema';
 
 const Home = () => {
   const [prompt, setPrompt] = useState<string>('Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review.');
+  const [selectedChartType, setSelectedChartType] = useState<string>('gantt');
   const [codeVisible, setCodeVisible] = useState<boolean>(true);
   const { toast } = useToast();
-  const { generateChart, chartData, isLoading, chartCode, error } = useChartGenerator();
+  const { generateChart, chartData, chartType, isLoading, chartCode, error } = useChartGenerator();
+
+  // Chart type options with icons
+  const chartTypes = [
+    { id: 'gantt', name: 'Gantt Chart', icon: <GanttChartSquareIcon className="h-4 w-4 mr-2" /> },
+    { id: 'bar', name: 'Bar Chart', icon: <BarChartIcon className="h-4 w-4 mr-2" /> },
+    { id: 'pie', name: 'Pie Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" /> },
+  ];
+
+  // Get chart type prompt suggestions
+  const getPlaceholderPrompt = (type: string) => {
+    switch (type) {
+      case 'gantt':
+        return 'Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review.';
+      case 'bar':
+        return 'Create a bar chart showing sales data for the last 6 months across different product categories.';
+      case 'pie':
+        return 'Generate a pie chart showing market share distribution among top 5 companies in the tech industry.';
+      default:
+        return '';
+    }
+  };
+
+  // Handle chart type change
+  const handleChartTypeChange = (value: string) => {
+    setSelectedChartType(value);
+    setPrompt(getPlaceholderPrompt(value));
+  };
 
   const handleGenerateChart = async () => {
     if (!prompt.trim()) {
@@ -32,7 +64,7 @@ const Home = () => {
       return;
     }
 
-    await generateChart(prompt, 'gantt');
+    await generateChart(prompt, selectedChartType);
   };
 
   const handleClearPrompt = () => {
@@ -51,7 +83,7 @@ const Home = () => {
 
   const handleDownloadChart = () => {
     // Get the SVG element
-    const svgElement = document.querySelector('#gantt-chart svg');
+    const svgElement = document.querySelector('#chart-container svg');
     if (!svgElement) {
       toast({
         title: "No chart to download",
@@ -66,10 +98,16 @@ const Home = () => {
     const blob = new Blob([svgData], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
 
+    // Create appropriate file name based on chart type
+    let fileName = chartData?.title || 'chart';
+    if (chartType) {
+      fileName = `${fileName}-${chartType}`;
+    }
+
     // Create a link and trigger download
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${chartData?.title || 'gantt-chart'}.svg`;
+    link.download = `${fileName}.svg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -80,7 +118,7 @@ const Home = () => {
       <Sidebar />
       
       <main className="flex-1 overflow-auto">
-        <Header title="Gantt Chart Generator" />
+        <Header title="AI Chart Generator" />
         
         <div className="p-6">
           {/* Input Section */}
@@ -88,14 +126,33 @@ const Home = () => {
             <CardContent className="p-0">
               <div className="p-4 border-b border-gray-200">
                 <h2 className="font-medium">Describe the chart you want to create</h2>
-                <p className="text-sm text-gray-500">Be specific about tasks, timelines, and dependencies</p>
+                <p className="text-sm text-gray-500">Select a chart type and be specific about your data needs</p>
               </div>
               <div className="p-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">Chart Type</label>
+                  <Select value={selectedChartType} onValueChange={handleChartTypeChange}>
+                    <SelectTrigger className="w-full md:w-64">
+                      <SelectValue placeholder="Select a chart type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chartTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          <div className="flex items-center">
+                            {type.icon}
+                            {type.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <Textarea 
                   id="chart-prompt" 
                   rows={3} 
                   className="w-full resize-none"
-                  placeholder="e.g., Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review."
+                  placeholder={`e.g., ${getPlaceholderPrompt(selectedChartType)}`}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                 />
@@ -128,7 +185,7 @@ const Home = () => {
             <CardContent className="p-0">
               <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                 <div>
-                  <h2 className="font-medium">Gantt Chart Visualization</h2>
+                  <h2 className="font-medium">{chartType ? `${chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart Visualization` : 'Chart Visualization'}</h2>
                   <p className="text-sm text-gray-500">{chartData?.title || 'No chart generated yet'}</p>
                 </div>
                 <div className="flex gap-2">
@@ -146,7 +203,7 @@ const Home = () => {
               
               {/* Visualization area */}
               <div className="p-4 overflow-x-auto">
-                <div id="gantt-chart" className="min-h-[400px] w-full">
+                <div id="chart-container" className="min-h-[400px] w-full">
                   {error && (
                     <div className="flex items-center justify-center min-h-[400px] text-red-500">
                       <p>Error: {error}</p>
@@ -163,7 +220,7 @@ const Home = () => {
                     </div>
                   )}
                   {chartData && !isLoading && (
-                    <GanttChart data={chartData} />
+                    <ChartRenderer data={chartData} chartType={chartType} />
                   )}
                 </div>
               </div>

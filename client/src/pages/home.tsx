@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import ChartRenderer from '@/components/ui/chart-renderer';
@@ -16,13 +16,39 @@ import {
   RefreshCw,
   BarChartIcon,
   PieChartIcon,
-  GanttChartSquareIcon
+  GanttChartSquareIcon,
+  LineChartIcon,
+  NetworkIcon
 } from 'lucide-react';
 import { type ChartData } from '@shared/schema';
 
+// Get chart type prompt suggestions
+const getPlaceholderPrompt = (type: string): string => {
+  switch (type) {
+    case 'gantt':
+      return 'Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review.';
+    case 'bar':
+      return 'Create a bar chart showing sales data for the last 6 months across different product categories.';
+    case 'pie':
+      return 'Generate a pie chart showing market share distribution among top 5 companies in the tech industry.';
+    case 'line':
+      return 'Create a line chart showing temperature trends over the past 12 months.';
+    case 'flow':
+      return 'Generate a flow chart to visualize the software development process.';
+    default:
+      return 'Describe the chart you want to create...';
+  }
+};
+
 const Home = () => {
-  const [prompt, setPrompt] = useState<string>('Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review.');
-  const [selectedChartType, setSelectedChartType] = useState<string>('gantt');
+  // Get chart type from URL query params or default to 'gantt'
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlChartType = urlParams.get('type');
+  const validChartTypes = ['gantt', 'bar', 'pie', 'line', 'flow'];
+  const initialChartType = urlChartType && validChartTypes.includes(urlChartType) ? urlChartType : 'gantt';
+  
+  const [prompt, setPrompt] = useState<string>(getPlaceholderPrompt(initialChartType));
+  const [selectedChartType, setSelectedChartType] = useState<string>(initialChartType);
   const [codeVisible, setCodeVisible] = useState<boolean>(true);
   const { toast } = useToast();
   const { generateChart, chartData, chartType, isLoading, chartCode, error } = useChartGenerator();
@@ -32,21 +58,9 @@ const Home = () => {
     { id: 'gantt', name: 'Gantt Chart', icon: <GanttChartSquareIcon className="h-4 w-4 mr-2" /> },
     { id: 'bar', name: 'Bar Chart', icon: <BarChartIcon className="h-4 w-4 mr-2" /> },
     { id: 'pie', name: 'Pie Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" /> },
+    { id: 'line', name: 'Line Chart', icon: <LineChartIcon className="h-4 w-4 mr-2" /> },
+    { id: 'flow', name: 'Flow Chart', icon: <NetworkIcon className="h-4 w-4 mr-2" /> },
   ];
-
-  // Get chart type prompt suggestions
-  const getPlaceholderPrompt = (type: string) => {
-    switch (type) {
-      case 'gantt':
-        return 'Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review.';
-      case 'bar':
-        return 'Create a bar chart showing sales data for the last 6 months across different product categories.';
-      case 'pie':
-        return 'Generate a pie chart showing market share distribution among top 5 companies in the tech industry.';
-      default:
-        return '';
-    }
-  };
 
   // Handle chart type change
   const handleChartTypeChange = (value: string) => {
@@ -115,7 +129,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-neutral-light text-neutral-dark">
-      <Sidebar />
+      <Sidebar activeChartType={selectedChartType} />
       
       <main className="flex-1 overflow-auto">
         <Header title="AI Chart Generator" />

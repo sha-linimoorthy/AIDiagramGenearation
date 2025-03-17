@@ -4,23 +4,37 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { type Chart } from '@shared/schema';
-import { BarChartHorizontal, PieChart, BarChart, LineChart, Network, Settings, CircleUser } from 'lucide-react';
+import { 
+  BarChartHorizontal, 
+  PieChart, 
+  BarChart, 
+  LineChart, 
+  Network, 
+  Settings, 
+  CircleUser, 
+  GanttChartSquare 
+} from 'lucide-react';
 
-type ChartType = {
+export type ChartType = {
+  id: string;
   name: string;
   icon: React.ReactNode;
   path: string;
 };
 
-const chartTypes: ChartType[] = [
-  { name: 'Gantt Chart', icon: <BarChartHorizontal className="h-4 w-4" />, path: '/' },
-  { name: 'Pie Chart', icon: <PieChart className="h-4 w-4" />, path: '/pie-chart' },
-  { name: 'Bar Chart', icon: <BarChart className="h-4 w-4" />, path: '/bar-chart' },
-  { name: 'Line Chart', icon: <LineChart className="h-4 w-4" />, path: '/line-chart' },
-  { name: 'Flow Chart', icon: <Network className="h-4 w-4" />, path: '/flow-chart' }
+export const chartTypes: ChartType[] = [
+  { id: 'gantt', name: 'Gantt Chart', icon: <GanttChartSquare className="h-4 w-4" />, path: '/?type=gantt' },
+  { id: 'bar', name: 'Bar Chart', icon: <BarChart className="h-4 w-4" />, path: '/?type=bar' },
+  { id: 'pie', name: 'Pie Chart', icon: <PieChart className="h-4 w-4" />, path: '/?type=pie' },
+  { id: 'line', name: 'Line Chart', icon: <LineChart className="h-4 w-4" />, path: '/?type=line' },
+  { id: 'flow', name: 'Flow Chart', icon: <Network className="h-4 w-4" />, path: '/?type=flow' }
 ];
 
-const Sidebar = () => {
+interface SidebarProps {
+  activeChartType?: string;
+}
+
+const Sidebar = ({ activeChartType = 'gantt' }: SidebarProps) => {
   const [location] = useLocation();
   
   // Fetch recent charts
@@ -49,7 +63,7 @@ const Sidebar = () => {
                 href={type.path}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100",
-                  location === type.path 
+                  type.id === activeChartType
                     ? "bg-primary/10 text-primary" 
                     : "text-gray-700"
                 )}

@@ -107,7 +107,7 @@ export type ChartData =
 // Gemini API request schema
 export const geminiRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
-  chartType: z.enum(["gantt", "bar", "pie"]).default("gantt"),
+  chartType: z.enum(["gantt", "bar", "pie", "line", "flow"]).default("gantt"),
 });
 
 export type GeminiRequest = z.infer<typeof geminiRequestSchema>;

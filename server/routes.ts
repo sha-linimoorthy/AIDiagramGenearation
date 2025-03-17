@@ -115,9 +115,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           Only respond with valid JSON, no additional text. Make sure all values add up to 100 for pie chart percentages.
         `;
+      } else if (chartType === 'line') {
+        geminiPrompt = `
+          Parse the following line chart request into a structured JSON format:
+          ${prompt}
+          
+          Return a JSON object with the following structure:
+          {
+            "title": "Chart title",
+            "xAxisLabel": "X-Axis Label",
+            "yAxisLabel": "Y-Axis Label",
+            "data": [
+              {
+                "label": "Jan",
+                "value": 25,
+                "category": "Temperature"
+              },
+              {
+                "label": "Feb",
+                "value": 30,
+                "category": "Temperature"
+              }
+            ]
+          }
+          
+          Only respond with valid JSON, no additional text.
+        `;
+      } else if (chartType === 'flow') {
+        geminiPrompt = `
+          Parse the following flow chart request into a structured JSON format:
+          ${prompt}
+          
+          Return a JSON object with the following structure:
+          {
+            "title": "Chart title",
+            "nodes": [
+              {
+                "id": "1",
+                "label": "Start",
+                "type": "start"
+              },
+              {
+                "id": "2",
+                "label": "Process",
+                "type": "process"
+              },
+              {
+                "id": "3",
+                "label": "End",
+                "type": "end"
+              }
+            ],
+            "links": [
+              {
+                "source": "1",
+                "target": "2",
+                "label": "Next"
+              },
+              {
+                "source": "2",
+                "target": "3",
+                "label": "Complete"
+              }
+            ]
+          }
+          
+          Only respond with valid JSON, no additional text.
+        `;
       } else {
         return res.status(400).json({
-          message: `Unsupported chart type: ${chartType}. Supported types are: gantt, bar, pie`
+          message: `Unsupported chart type: ${chartType}. Supported types are: gantt, bar, pie, line, flow`
         });
       }
 
@@ -186,6 +253,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validatedChartData = barChartDataSchema.parse(jsonData);
         } else if (chartType === 'pie') {
           validatedChartData = pieChartDataSchema.parse(jsonData);
+        } else if (chartType === 'line') {
+          // For now, use the bar chart schema for line charts as they have similar structure
+          validatedChartData = barChartDataSchema.parse(jsonData);
+        } else if (chartType === 'flow') {
+          // For flow charts, we'll temporarily pass through the data without validation
+          // In a production environment, we would create a proper flow chart schema
+          validatedChartData = jsonData;
         } else {
           throw new Error(`Unsupported chart type: ${chartType}`);
         }
@@ -243,9 +317,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         barChartDataSchema.parse(data);
       } else if (type === 'pie') {
         pieChartDataSchema.parse(data);
+      } else if (type === 'line') {
+        // For now, use the bar chart schema for line charts as they have similar structure
+        barChartDataSchema.parse(data);
+      } else if (type === 'flow') {
+        // For flow charts, we'll temporarily accept all data 
+        // In a production environment, we would create a proper flow chart schema
       } else {
         return res.status(400).json({
-          message: `Unsupported chart type: ${type}. Supported types are: gantt, bar, pie`
+          message: `Unsupported chart type: ${type}. Supported types are: gantt, bar, pie, line, flow`
         });
       }
       

@@ -26,11 +26,17 @@ function renderLineChart(data: BarChartData, container: HTMLElement) {
   const width = Math.max(container.clientWidth, 500) - margin.left - margin.right;
   const height = 500 - margin.top - margin.bottom;
   
+  // Ensure all data points have a category, use "Default" if not provided
+  const dataWithCategories = data.data.map(d => ({
+    ...d,
+    category: d.category || "Default"
+  }));
+  
   // Group data by category for multiple lines
-  const groupedData = d3.group(data.data, d => d.category);
+  const groupedData = d3.group(dataWithCategories, d => d.category);
   
   // Get all unique x-axis labels
-  const labels = Array.from(new Set(data.data.map(d => d.label)));
+  const labels = Array.from(new Set(dataWithCategories.map(d => d.label)));
   
   // Create SVG element
   const svg = d3.select(container)
@@ -57,7 +63,7 @@ function renderLineChart(data: BarChartData, container: HTMLElement) {
   
   // Y scale
   const y = d3.scaleLinear()
-    .domain([0, d3.max(data.data, d => d.value) as number * 1.1])
+    .domain([0, d3.max(dataWithCategories, d => d.value) as number * 1.1])
     .nice()
     .range([height, 0]);
   
@@ -95,7 +101,7 @@ function renderLineChart(data: BarChartData, container: HTMLElement) {
   groupedData.forEach((values, category) => {
     // Create line generator
     const line = d3.line<any>()
-      .x(d => x(d.label) as number + x.bandwidth() / 2)
+      .x(d => x(d.label as string) as number + x.bandwidth() / 2)
       .y(d => y(d.value));
     
     // Add line
@@ -112,7 +118,7 @@ function renderLineChart(data: BarChartData, container: HTMLElement) {
       .enter()
       .append("circle")
       .attr("class", `dot-${category.replace(/\s+/g, "-")}`)
-      .attr("cx", d => x(d.label) as number + x.bandwidth() / 2)
+      .attr("cx", d => x(d.label as string) as number + x.bandwidth() / 2)
       .attr("cy", d => y(d.value))
       .attr("r", 4)
       .attr("fill", colorScale(category))
@@ -146,13 +152,13 @@ function renderLineChart(data: BarChartData, container: HTMLElement) {
     .attr("x", width - 19)
     .attr("width", 19)
     .attr("height", 19)
-    .attr("fill", d => colorScale(d));
+    .attr("fill", d => colorScale(d as string));
 
   legend.append("text")
     .attr("x", width - 24)
     .attr("y", 9.5)
     .attr("dy", "0.32em")
-    .text(d => d);
+    .text(d => d as string);
   
   // Add tooltip
   const tooltip = d3.select(container)

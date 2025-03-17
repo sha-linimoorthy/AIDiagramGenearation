@@ -114,23 +114,32 @@ function renderFlowChart(data: FlowChartData, container: HTMLElement) {
   
   // Create nodes
   const node = svg.append("g")
-    .selectAll(".node")
+    .selectAll<SVGGElement, FlowNode>(".node")
     .data(nodes)
     .enter()
     .append("g")
-    .attr("class", "node")
-    .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended));
+    .attr("class", "node");
+  
+  // Set up drag behavior separately to handle types correctly
+  const dragBehavior = d3.drag<SVGGElement, FlowNode>()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended);
+  
+  // Apply drag behavior
+  node.call(dragBehavior as any);
   
   // Add shapes to nodes based on type
-  node.each(function(d: any) {
+  node.each(function(d) {
+    const nodeSelection = d3.select(this);
     const shape = nodeShapes[d.type] || nodeShapes.process;
-    shape(d3.select(this))
-      .attr("fill", nodeColors[d.type] || "#2196F3")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2);
+    const result = shape(nodeSelection);
+    if (result) {
+      result
+        .attr("fill", nodeColors[d.type] || "#2196F3")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2);
+    }
   });
   
   // Add labels to nodes

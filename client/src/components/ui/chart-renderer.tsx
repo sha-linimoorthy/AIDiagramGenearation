@@ -2,6 +2,8 @@ import { BarChartData, ChartData, GanttChartData, PieChartData } from '@shared/s
 import GanttChart from './gantt-chart';
 import BarChart from './bar-chart';
 import PieChart from './pie-chart';
+import LineChart from './line-chart';
+import FlowChart from './flow-chart';
 
 interface ChartRendererProps {
   data: ChartData | null;
@@ -23,6 +25,10 @@ const ChartRenderer = ({ data, chartType }: ChartRendererProps) => {
       return <BarChart data={data as BarChartData} />;
     case 'pie':
       return <PieChart data={data as PieChartData} />;
+    case 'line':
+      return <LineChart data={data as BarChartData} />;
+    case 'flow':
+      return <FlowChart data={data as any} />;
     default:
       return <div className="flex items-center justify-center h-64 border rounded-lg text-red-500">
         Unsupported chart type: {chartType}

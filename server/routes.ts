@@ -20,6 +20,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API route for generating chart data from natural language using Gemini API
   app.post('/api/generate-chart', async (req, res) => {
     try {
+      console.log("Received chart generation request:", req.body);
+      
       // Validate request body
       const validatedData = geminiRequestSchema.parse(req.body);
       const { prompt, chartType } = validatedData;
@@ -27,6 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the Gemini API key from environment variables
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
+        console.error("Gemini API key not configured");
         return res.status(500).json({ 
           message: "Gemini API key is not configured. Please set the GEMINI_API_KEY environment variable." 
         });
@@ -55,6 +58,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Only respond with valid JSON, no additional text.
       `;
 
+      console.log("Sending request to Gemini API with prompt:", prompt);
+
       const geminiRequestBody = {
         contents: [{
           parts: [{ text: geminiPrompt }]
@@ -64,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Call Gemini API
         const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: {
@@ -76,14 +81,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (!geminiResponse.ok) {
           const errorText = await geminiResponse.text();
+          console.error("Gemini API error response:", errorText);
           return res.status(geminiResponse.status).json({ 
             message: `Failed to get response from Gemini API: ${errorText}` 
           });
         }
 
         const geminiData = await geminiResponse.json() as GeminiGenerateContentResponse;
+        console.log("Received response from Gemini API:", JSON.stringify(geminiData));
         
         if (!geminiData.candidates || geminiData.candidates.length === 0) {
+          console.error("No candidates in Gemini API response");
           return res.status(400).json({ 
             message: "No valid response from Gemini API" 
           });
@@ -91,10 +99,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Extract the text from the response
         const responseText = geminiData.candidates[0].content.parts[0].text;
+        console.log("Raw response text:", responseText);
         
         // Extract JSON from the response text
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
+          console.error("Could not extract JSON from response");
           return res.status(400).json({ 
             message: "Could not extract valid JSON from Gemini API response" 
           });
@@ -102,20 +112,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Parse the extracted JSON
         const jsonData = JSON.parse(jsonMatch[0]);
+        console.log("Parsed JSON data:", jsonData);
         
         // Validate the parsed data against our schema
         const validatedChartData = ganttChartDataSchema.parse(jsonData);
+        console.log("Validated chart data:", validatedChartData);
         
         // Return the validated data
         return res.status(200).json(validatedChartData);
       } catch (error) {
         if (error instanceof SyntaxError) {
+          console.error("JSON syntax error:", error);
           return res.status(400).json({ 
             message: "Invalid JSON in Gemini API response" 
           });
         }
         if (error instanceof ZodError) {
           const validationError = fromZodError(error);
+          console.error("Zod validation error:", validationError);
           return res.status(400).json({ 
             message: `Chart data validation error: ${validationError.message}` 
           });
@@ -128,6 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
+        console.error("Request validation error:", validationError);
         return res.status(400).json({ 
           message: `Request validation error: ${validationError.message}` 
         });

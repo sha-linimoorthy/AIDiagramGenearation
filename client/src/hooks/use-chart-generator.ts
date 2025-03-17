@@ -25,6 +25,7 @@ export function useChartGenerator(): ChartGeneratorResult {
       return await response.json();
     },
     onSuccess: (data: GanttChartData) => {
+      console.log("Chart data received:", data);
       setChartData(data);
       setError(null);
       toast({
@@ -33,6 +34,7 @@ export function useChartGenerator(): ChartGeneratorResult {
       });
     },
     onError: (error: Error) => {
+      console.error("Chart generation error:", error);
       setChartData(null);
       setError(error.message || "Failed to generate chart");
       toast({

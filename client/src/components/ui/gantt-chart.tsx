@@ -10,7 +10,16 @@ const GanttChart = ({ data }: GanttChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!chartRef.current || !data || !data.tasks || data.tasks.length === 0) return;
+    if (!chartRef.current || !data || !data.tasks || data.tasks.length === 0) {
+      console.log("Unable to render chart:", { 
+        chartRef: !!chartRef.current, 
+        data: !!data, 
+        tasks: data?.tasks?.length 
+      });
+      return;
+    }
+
+    console.log("Rendering gantt chart with data:", data);
 
     // Clear previous chart
     d3.select(chartRef.current).selectAll('*').remove();

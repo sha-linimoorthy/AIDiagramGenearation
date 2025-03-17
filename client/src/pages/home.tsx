@@ -147,7 +147,6 @@ const Home = () => {
               {/* Visualization area */}
               <div className="p-4 overflow-x-auto">
                 <div id="gantt-chart" className="min-h-[400px] w-full">
-                  {/* Chart will be rendered here by D3.js */}
                   {error && (
                     <div className="flex items-center justify-center min-h-[400px] text-red-500">
                       <p>Error: {error}</p>
@@ -158,10 +157,13 @@ const Home = () => {
                       <p>Enter a prompt and click Generate Chart to create a visualization</p>
                     </div>
                   )}
-                  {isLoading && !chartData && (
+                  {isLoading && (
                     <div className="flex items-center justify-center min-h-[400px]">
                       <RefreshCw className="h-8 w-8 animate-spin text-primary" />
                     </div>
+                  )}
+                  {chartData && !isLoading && (
+                    <GanttChart data={chartData} />
                   )}
                 </div>
               </div>

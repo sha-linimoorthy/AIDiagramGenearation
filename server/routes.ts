@@ -1,7 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { geminiRequestSchema, ganttChartDataSchema } from "@shared/schema";
+import { 
+  geminiRequestSchema, 
+  ganttChartDataSchema,
+  barChartDataSchema,
+  pieChartDataSchema
+} from "@shared/schema";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -35,28 +40,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Prepare the request to Gemini API
-      const geminiPrompt = `
-        Parse the following ${chartType} chart request into a structured JSON format:
-        ${prompt}
-        
-        Return a JSON object with the following structure for a Gantt chart:
-        {
-          "title": "Chart title",
-          "tasks": [
-            {
-              "id": 1,
-              "name": "Task name",
-              "start": "2023-03-01",
-              "end": "2023-03-15",
-              "dependencies": [2, 3],
-              "category": "Planning"
-            }
-          ]
-        }
-        
-        Only respond with valid JSON, no additional text.
-      `;
+      // Prepare the request to Gemini API based on chart type
+      let geminiPrompt = '';
+      
+      if (chartType === 'gantt') {
+        geminiPrompt = `
+          Parse the following Gantt chart request into a structured JSON format:
+          ${prompt}
+          
+          Return a JSON object with the following structure:
+          {
+            "title": "Chart title",
+            "tasks": [
+              {
+                "id": 1,
+                "name": "Task name",
+                "start": "2023-03-01",
+                "end": "2023-03-15",
+                "dependencies": [2, 3],
+                "category": "Planning"
+              }
+            ]
+          }
+          
+          Only respond with valid JSON, no additional text.
+        `;
+      } else if (chartType === 'bar') {
+        geminiPrompt = `
+          Parse the following bar chart request into a structured JSON format:
+          ${prompt}
+          
+          Return a JSON object with the following structure:
+          {
+            "title": "Chart title",
+            "xAxisLabel": "X-Axis Label",
+            "yAxisLabel": "Y-Axis Label",
+            "data": [
+              {
+                "label": "Category A",
+                "value": 25,
+                "category": "Group 1"
+              },
+              {
+                "label": "Category B",
+                "value": 50,
+                "category": "Group 2"
+              }
+            ]
+          }
+          
+          Only respond with valid JSON, no additional text.
+        `;
+      } else if (chartType === 'pie') {
+        geminiPrompt = `
+          Parse the following pie chart request into a structured JSON format:
+          ${prompt}
+          
+          Return a JSON object with the following structure:
+          {
+            "title": "Chart title",
+            "data": [
+              {
+                "label": "Category A",
+                "value": 25,
+                "color": "#4338CA"
+              },
+              {
+                "label": "Category B",
+                "value": 75,
+                "color": "#3B82F6"
+              }
+            ]
+          }
+          
+          Only respond with valid JSON, no additional text. Make sure all values add up to 100 for pie chart percentages.
+        `;
+      } else {
+        return res.status(400).json({
+          message: `Unsupported chart type: ${chartType}. Supported types are: gantt, bar, pie`
+        });
+      }
 
       console.log("Sending request to Gemini API with prompt:", prompt);
 
@@ -114,8 +177,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const jsonData = JSON.parse(jsonMatch[0]);
         console.log("Parsed JSON data:", jsonData);
         
-        // Validate the parsed data against our schema
-        const validatedChartData = ganttChartDataSchema.parse(jsonData);
+        // Validate the parsed data against the appropriate schema based on chart type
+        let validatedChartData;
+        
+        if (chartType === 'gantt') {
+          validatedChartData = ganttChartDataSchema.parse(jsonData);
+        } else if (chartType === 'bar') {
+          validatedChartData = barChartDataSchema.parse(jsonData);
+        } else if (chartType === 'pie') {
+          validatedChartData = pieChartDataSchema.parse(jsonData);
+        } else {
+          throw new Error(`Unsupported chart type: ${chartType}`);
+        }
+        
         console.log("Validated chart data:", validatedChartData);
         
         // Return the validated data
@@ -165,6 +239,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate chart data based on type
       if (type === 'gantt') {
         ganttChartDataSchema.parse(data);
+      } else if (type === 'bar') {
+        barChartDataSchema.parse(data);
+      } else if (type === 'pie') {
+        pieChartDataSchema.parse(data);
+      } else {
+        return res.status(400).json({
+          message: `Unsupported chart type: ${type}. Supported types are: gantt, bar, pie`
+        });
       }
       
       // Save chart to database

@@ -56,10 +56,58 @@ export const ganttChartDataSchema = z.object({
 
 export type GanttChartData = z.infer<typeof ganttChartDataSchema>;
 
+// Schema for bar chart data entry
+export const barChartDataPointSchema = z.object({
+  label: z.string(),
+  value: z.number(),
+  category: z.string().optional(),
+});
+
+export type BarChartDataPoint = z.infer<typeof barChartDataPointSchema>;
+
+// Schema for bar chart data
+export const barChartDataSchema = z.object({
+  title: z.string(),
+  xAxisLabel: z.string().optional(),
+  yAxisLabel: z.string().optional(),
+  data: z.array(barChartDataPointSchema),
+});
+
+export type BarChartData = z.infer<typeof barChartDataSchema>;
+
+// Schema for pie chart data entry
+export const pieChartDataPointSchema = z.object({
+  label: z.string(),
+  value: z.number(),
+  color: z.string().optional(),
+});
+
+export type PieChartDataPoint = z.infer<typeof pieChartDataPointSchema>;
+
+// Schema for pie chart data
+export const pieChartDataSchema = z.object({
+  title: z.string(),
+  data: z.array(pieChartDataPointSchema),
+});
+
+export type PieChartData = z.infer<typeof pieChartDataSchema>;
+
+// Union of all chart data types
+export const chartDataSchema = z.union([
+  ganttChartDataSchema,
+  barChartDataSchema,
+  pieChartDataSchema,
+]);
+
+export type ChartData = 
+  | GanttChartData 
+  | BarChartData 
+  | PieChartData;
+
 // Gemini API request schema
 export const geminiRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
-  chartType: z.string().default("gantt"),
+  chartType: z.enum(["gantt", "bar", "pie"]).default("gantt"),
 });
 
 export type GeminiRequest = z.infer<typeof geminiRequestSchema>;

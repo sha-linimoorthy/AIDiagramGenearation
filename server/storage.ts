@@ -48,10 +48,14 @@ export class MemStorage implements IStorage {
   async createChart(insertChart: InsertChart): Promise<Chart> {
     const id = this.currentChartId++;
     const createdAt = new Date();
+    // Ensure userId is null if it's undefined
+    const userId = insertChart.userId === undefined ? null : insertChart.userId;
+    
     const chart: Chart = { 
       ...insertChart, 
       id,
-      createdAt 
+      createdAt,
+      userId
     };
     this.charts.set(id, chart);
     return chart;

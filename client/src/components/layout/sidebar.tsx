@@ -45,16 +45,17 @@ const Sidebar = () => {
         <ul className="space-y-1">
           {chartTypes.map((type) => (
             <li key={type.name}>
-              <Link href={type.path}>
-                <a className={cn(
+              <Link 
+                href={type.path}
+                className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100",
                   location === type.path 
                     ? "bg-primary/10 text-primary" 
                     : "text-gray-700"
-                )}>
-                  {type.icon}
-                  <span>{type.name}</span>
-                </a>
+                )}
+              >
+                {type.icon}
+                <span>{type.name}</span>
               </Link>
             </li>
           ))}
@@ -65,11 +66,12 @@ const Sidebar = () => {
           {recentCharts && recentCharts.length > 0 ? (
             recentCharts.map((chart) => (
               <li key={chart.id}>
-                <Link href={`/charts/${chart.id}`}>
-                  <a className="flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
-                    <BarChartHorizontal className="h-4 w-4" />
-                    <span className="text-sm">{chart.title}</span>
-                  </a>
+                <Link 
+                  href={`/charts/${chart.id}`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
+                >
+                  <BarChartHorizontal className="h-4 w-4" />
+                  <span className="text-sm">{chart.title}</span>
                 </Link>
               </li>
             ))

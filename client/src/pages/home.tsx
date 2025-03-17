@@ -227,8 +227,8 @@ const Home = () => {
             </CardContent>
           </Card>
           
-          {/* Code Section */}
-          {codeVisible && (
+          {/* Code Section - Only visible for Gantt charts */}
+          {codeVisible && chartType === 'gantt' && chartCode && (
             <Card>
               <CardContent className="p-0">
                 <div className="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -243,7 +243,7 @@ const Home = () => {
                 
                 <div className="p-4 overflow-x-auto">
                   <pre className="bg-gray-800 text-gray-200 p-4 rounded-md text-sm font-mono overflow-x-auto">
-                    <code>{chartCode || '// Chart code will appear here after generation'}</code>
+                    <code>{chartCode}</code>
                   </pre>
                 </div>
               </CardContent>

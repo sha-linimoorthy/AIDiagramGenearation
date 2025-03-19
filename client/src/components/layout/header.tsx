@@ -11,12 +11,12 @@ const Header = ({ title }: HeaderProps) => {
       <div className="flex items-center justify-between px-6 py-3">
         <h1 className="text-xl font-semibold">{title}</h1>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon">
+          {/*<Button variant="ghost" size="icon">
             <HelpCircle className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon">
             <BellIcon className="h-5 w-5" />
-          </Button>
+          </Button>*/}
         </div>
       </div>
     </header>

@@ -26,8 +26,8 @@ export const chartTypes: ChartType[] = [
   { id: 'gantt', name: 'Gantt Chart', icon: <GanttChartSquare className="h-4 w-4" />, path: '/?type=gantt' },
   { id: 'bar', name: 'Bar Chart', icon: <BarChart className="h-4 w-4" />, path: '/?type=bar' },
   { id: 'pie', name: 'Pie Chart', icon: <PieChart className="h-4 w-4" />, path: '/?type=pie' },
-  { id: 'line', name: 'Line Chart', icon: <LineChart className="h-4 w-4" />, path: '/?type=line' },
-  { id: 'flow', name: 'Flow Chart', icon: <Network className="h-4 w-4" />, path: '/?type=flow' }
+  /*{ id: 'line', name: 'Line Chart', icon: <LineChart className="h-4 w-4" />, path: '/?type=line' },
+  { id: 'flow', name: 'Flow Chart', icon: <Network className="h-4 w-4" />, path: '/?type=flow' }*/
 ];
 
 interface SidebarProps {
@@ -46,10 +46,6 @@ const Sidebar = ({ activeChartType = 'gantt' }: SidebarProps) => {
     <aside className="w-full md:w-64 bg-white border-r border-gray-200 md:h-screen">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <CircleUser className="h-5 w-5 text-white" />
-          </div>
-          <h1 className="text-xl font-semibold">ChartifyAI</h1>
         </div>
         <p className="text-sm text-gray-500 mt-1">AI-powered diagram generator</p>
       </div>

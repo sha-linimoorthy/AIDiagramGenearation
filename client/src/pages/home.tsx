@@ -27,11 +27,11 @@ import { type ChartData } from '@shared/schema';
 const getPlaceholderPrompt = (type: string): string => {
   switch (type) {
     case 'gantt':
-      return 'Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming, development, testing, and review.';
+      return 'Generate a detailed Gantt chart for Agile sprints. Include tasks for backlog grooming 2025 March 2 to 2025 March 4, development 2025 March 5 to 2025 March 17, testing 2025 March 10 to 2025 March 20, and review 2025 March 21 to 2025 March 24.';
     case 'bar':
-      return 'Create a bar chart showing sales data for the last 6 months across different product categories.';
+      return 'Create a bar chart displaying the top 5 countries by GDP. Use the following data: USA - $25 trillion, China - $18 trillion, Japan - $4.2 trillion, Germany - $4.0 trillion, UK - $3.3 trillion. Label the axes appropriately and give the chart a title: Top 5 Countries by GDP (USD)';
     case 'pie':
-      return 'Generate a pie chart showing market share distribution among top 5 companies in the tech industry.';
+      return 'Generate a pie chart to visualize Bug Status Distribution. The chart should represent the percentage of bugs based on their current status: Open, In Progress, Fixed, and Closed. Use the following data: Open: 30, In Progress: 25, Fixed: 20, Closed: 25';
     case 'line':
       return 'Create a line chart showing temperature trends over the past 12 months.';
     case 'flow':
@@ -65,8 +65,8 @@ const Home = () => {
     { id: 'gantt', name: 'Gantt Chart', icon: <GanttChartSquareIcon className="h-4 w-4 mr-2" /> },
     { id: 'bar', name: 'Bar Chart', icon: <BarChartIcon className="h-4 w-4 mr-2" /> },
     { id: 'pie', name: 'Pie Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" /> },
-    { id: 'line', name: 'Line Chart', icon: <LineChartIcon className="h-4 w-4 mr-2" /> },
-    { id: 'flow', name: 'Flow Chart', icon: <NetworkIcon className="h-4 w-4 mr-2" /> },
+    /* { id: 'line', name: 'Line Chart', icon: <LineChartIcon className="h-4 w-4 mr-2" /> },
+    { id: 'flow', name: 'Flow Chart', icon: <NetworkIcon className="h-4 w-4 mr-2" /> },*/
   ];
 
   // Handle chart type change
@@ -177,7 +177,7 @@ const Home = () => {
       <Sidebar activeChartType={selectedChartType} />
       
       <main className="flex-1 overflow-auto">
-        <Header title="AI Chart Generator" />
+        <Header title="Intelliassist Chart Generator" />
         
         <div className="p-6">
           {/* Input Section */}
@@ -254,9 +254,9 @@ const Home = () => {
                   <Button variant="ghost" size="icon" onClick={handleFullscreen} disabled={!chartData}>
                     <MaximizeIcon className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={handleShare} disabled={!chartData}>
+                  {/*<Button variant="ghost" size="icon" onClick={handleShare} disabled={!chartData}>
                     <Share2Icon className="h-4 w-4" />
-                  </Button>
+                  </Button>*/}
                 </div>
               </div>
               
@@ -285,9 +285,7 @@ const Home = () => {
               </div>
             </CardContent>
           </Card>
-          
-          {/* Code Section - Only visible for Gantt charts */}
-          {codeVisible && chartType === 'gantt' && chartCode && (
+          {/*{codeVisible && chartCode && (
             <Card>
               <CardContent className="p-0">
                 <div className="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -307,7 +305,7 @@ const Home = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+          )}*/}
         </div>
       </main>
       
